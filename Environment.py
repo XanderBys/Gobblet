@@ -45,11 +45,20 @@ class Environment:
             self.state.board[action['origin'][0]][action['origin'][1]] = 0
         
         if prev_occupant != 0:
-            pass
+            self.update_lower_layers(action, player, prev_occupant)
+            
         # update the turn tracker
         self.turn *= -1
         
         return [self.state, self.get_result(self.state)]
+    
+    def update_lower_layers(self, action, player, prev_occupant, i=0):
+        layer = self.state.lower_layers[i]
+        dest = layer[action['destination'][0]][action['destination'][1]]
+        if dest != 0:
+            self.update_lower_layers(self, action, player, dest, i+1)
+        dest = self.turn * action['size']
+        self.state.lower_layers[i+1][action['destination'][0]][action['destination'][1]] = prev_occupant
         
     def get_result(self, state):
         # returns None if the game isn't over, 1 if white wins and -1 if black wins
