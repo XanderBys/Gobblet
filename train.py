@@ -79,7 +79,7 @@ def main(player1, player2, env, rounds, display=False):
         env.turn = -1 if i % 2 == 0 else 1
 
 if __name__ == '__main__':
-    NUM_ROUNDS = 1000
+    NUM_ROUNDS = 10000
     DECAY_RATE = 0.99988
     
     environment = Environment(4, 4, 4)
@@ -90,4 +90,4 @@ if __name__ == '__main__':
     main(p1, p2, environment, NUM_ROUNDS)
     print('{} rounds of training finished at {}'.format(NUM_ROUNDS, time.strftime("%H:%M:%S")))
     p1.save_policy(time.strftime("%H:%M:%S"))
-    p2.save_policy()
+    p2.save_policy(time.strftime("%H:%M:%S"))

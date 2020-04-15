@@ -17,7 +17,7 @@ class State:
                 lower_check = False
                 break
 
-        return np.isin(other.board, transformations)[0].all() and lower_check
+        return np.isin(other.board, transformations)[0].all() #and lower_check
     
     def __hash__(self):
         return hash((str(self.board), str(self.lower_layers)))

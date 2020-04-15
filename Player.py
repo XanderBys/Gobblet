@@ -59,9 +59,9 @@ class Player:
             if value is None:
                 self.states_values[state] = 0
                 value = self.states_values[state]
-                
+
             value += self.LEARNING_RATE * (self.GAMMA * reward - value)
-            
+            self.states_values[state] = value
             reward = float(value)
            
         self.decay_exploration_rate()
