@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 from State import State
 from Player import Player
 
@@ -14,7 +15,7 @@ class Environment:
         
     def reset(self):
         # resets the board to be empty and the turn to be 'X'
-        self.state = State([[0 for i in range(self.NUM_COLS)] for j in range(self.NUM_COLS)])
+        self.state = State(np.array([[0 for i in range(self.NUM_COLS)] for j in range(self.NUM_COLS)]))
         self.turn = 1
     
     def update(self, action, player):
@@ -25,8 +26,8 @@ class Environment:
             raise ValueError("The action {} is not legal".format(action))
         
         # update the board and the player
-        prev_occupant = int(self.state.board[action['destination'][0]][action['destination'][1]])
-        self.state.board[action['destination'][0]][action['destination'][1]] = self.turn * action['size']
+        prev_occupant = int(self.state.board[action['destination'][0], action['destination'][1]])
+        self.state.board[action['destination'][0], action['destination'][1]] = self.turn * action['size']
 
         for i in player.pieces:
             condition = None
@@ -42,7 +43,7 @@ class Environment:
         
         if len(action['origin']) == 2:
             # if the piece was on the board, set its origin to be empty
-            self.state.board[action['origin'][0]][action['origin'][1]] = 0
+            self.state.board[action['origin'][0], action['origin'][1]] = 0
         
         if prev_occupant != 0:
             self.update_lower_layers(action, player, prev_occupant)
@@ -50,15 +51,15 @@ class Environment:
         # update the turn tracker
         self.turn *= -1
         
-        return [self.state, self.get_result(self.state)]
+        return (self.state, self.get_result(self.state))
     
     def update_lower_layers(self, action, player, prev_occupant, i=0):
         layer = self.state.lower_layers[i]
-        dest = layer[action['destination'][0]][action['destination'][1]]
+        dest = layer[action['destination'][0], action['destination'][1]]
         if dest != 0:
             self.update_lower_layers(self, action, player, dest, i+1)
         dest = self.turn * action['size']
-        self.state.lower_layers[i+1][action['destination'][0]][action['destination'][1]] = prev_occupant
+        self.state.lower_layers[i+1, action['destination'][0], action['destination'][1]] = prev_occupant
         
     def get_result(self, state):
         # returns None if the game isn't over, 1 if white wins and -1 if black wins
@@ -70,7 +71,9 @@ class Environment:
                 return sum(ones) / self.NUM_ROWS
             
         # check columns
-        for col in state.get_cols(state.board):
+        cols = state.board.copy()
+        cols.transpose()
+        for col in cols:
             ones = list(map(lambda x:(0 if x==0 else (1 if x>0 else -1)), col))
             if abs(sum(ones)) == self.NUM_COLS:
                 return sum(ones) / self.NUM_COLS
@@ -103,7 +106,7 @@ class Environment:
         return moves
     
     def is_valid_move(self, location, size):
-        destination = self.state.board[location[0]][location[1]]
+        destination = self.state.board[location[0], location[1]]
         try:
             return destination == 0 or abs(destination) < size
         except TypeError:

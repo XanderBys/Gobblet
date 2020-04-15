@@ -4,8 +4,8 @@ import Player
 import State
 
 env = Environment.Environment(4, 4, 4)
-player = Player.Player('p1', env, [[4, 3, 2, 1] for i in range(3)], 0.9, False)
-human = Player.Player('human', env, [[4, 3, 2, 1] for i in range(3)], 0, False)
+player = Player.Player('p1', env, [[{'location':j, 'size':4-j} for j in range(4)] for i in range(3)], 0.9, False)
+human = Player.Player('human', env, [[{'location':j, 'size':4-j} for j in range(4)] for i in range(3)], 0, False)
 player.load_policy('policy_p2')
 while True:
     while True:
@@ -13,7 +13,7 @@ while True:
         col = input("Type a col to move to: ")
         size = input("Type a size of piece to use: ")
         
-        next_state, result = env.update(((int(row), int(col)), int(size)), human)
+        next_state, result = env.update({'destination':(int(row), int(col)), 'size':int(size), 'origin':[0]}, human)
         env.state.board = next_state.board
         
         env.display()

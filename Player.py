@@ -1,5 +1,6 @@
 import random
 import copy
+import numpy as np
 from State import State
 
 class Player:
@@ -16,8 +17,8 @@ class Player:
         self.states = []
         self.states_values = {}
         
-        self.orig_pieces = copy.deepcopy(pieces)
         self.pieces = pieces
+        self.orig_pieces = copy.deepcopy(pieces)
         self.pieces_on_board = []
         
         self.win = 0
@@ -37,11 +38,11 @@ class Player:
             # use our states-values mappings to choose the best move
             max_value = -999
             for move in moves:
-                next_state = State(copy.deepcopy(state.board))
-                next_state.board[move['destination'][0]][move['destination'][1]] = symbol * move['size']
+                next_state = State(state.board.copy())
+                next_state.board[move['destination'][0], move['destination'][1]] = symbol * move['size']
                 if len(move['origin']) == 2:
                     # if the pieces was already on the board, fix it
-                    next_state.board[move['origin'][0]][move['origin'][1]] = 0
+                    next_state.board[move['origin'][0], move['origin'][1]] = 0
                     
                 val = self.states_values.get(next_state)
                 value = 0 if val is None else val

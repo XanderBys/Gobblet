@@ -72,7 +72,6 @@ def main(player1, player2, env, rounds, display=False):
         
         if i % (rounds / 20) == 0:
             print('{}% complete at {}. player1 W/L/D: {}/{}/{}'.format(i/(rounds / 100), time.strftime("%H:%M:%S"), player1.win, player1.loss, player1.draw))
-        
         # switch who starts the game
         players = players[::-1]
         # make sure players keep the same symbol
@@ -80,7 +79,7 @@ def main(player1, player2, env, rounds, display=False):
         env.turn = -1 if i % 2 == 0 else 1
 
 if __name__ == '__main__':
-    NUM_ROUNDS = 10000
+    NUM_ROUNDS = 1000
     DECAY_RATE = 0.99988
     
     environment = Environment(4, 4, 4)
