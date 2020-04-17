@@ -12,7 +12,7 @@ class State:
 
     def __eq__(self, other):
         get_transformations = self.get_transformations
-        array_eq = np.array_equal
+        arr_eq = np.array_equal
         transformations = get_transformations()
         lower_check = True
         for idx, i in enumerate(self.lower_layers):

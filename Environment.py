@@ -66,7 +66,7 @@ class Environment:
         
         # check rows
         for row in state.board:
-            ones = list(map(lambda x:(0 if x==0 else (1 if x>0 else -1)), row))
+            ones = np.sign(row)
             if abs(sum(ones)) == self.NUM_ROWS:
                 return sum(ones) / self.NUM_ROWS
             
@@ -74,14 +74,14 @@ class Environment:
         cols = state.board.copy()
         cols.transpose()
         for col in cols:
-            ones = list(map(lambda x:(0 if x==0 else (1 if x>0 else -1)), col))
+            ones = np.sign(row)
             if abs(sum(ones)) == self.NUM_COLS:
                 return sum(ones) / self.NUM_COLS
         
         # check diagonals
-        diags = [[state.board[i][i] for i in range(len(state.board))], [state.board[(self.NUM_COLS-1)-i][i] for i in range(len(state.board))]]
+        diags = [state.board.diagonal(), np.fliplr(state.board).diagonal()]
         for diag in diags:
-            ones = list(map(lambda x:(0 if x==0 else (1 if x>0 else -1)), diag))
+            ones = np.sign(diag)
             if abs(sum(ones)) == self.NUM_ROWS:
                 return sum(ones) / self.NUM_ROWS
         
@@ -90,18 +90,19 @@ class Environment:
     def get_legal_moves(self, player):
         # returns the legal moves that can be taken
         moves = []
-        
+        add_move = moves.append
+        is_valid_move = self.is_valid_move
         for idx, i in enumerate(self.state.board):
             for jIdx, j in enumerate(i):
                 for stack in player.pieces:
                     if len(stack) == 0:
                         continue
-                    if self.is_valid_move((idx, jIdx), stack[0]['size']):
-                        moves.append({'destination':(idx, jIdx), 'size':int(stack[0]['size']), 'origin':[0]})
+                    if is_valid_move((idx, jIdx), stack[0]['size']):
+                        add_move({'destination':(idx, jIdx), 'size':int(stack[0]['size']), 'origin':[0]})
                 
                 for piece in player.pieces_on_board:
-                    if self.is_valid_move((idx, jIdx), piece['size']):
-                        moves.append({'destination':(idx, jIdx), 'size':int(piece['size']), 'origin':copy.deepcopy(piece['location'])})
+                    if is_valid_move((idx, jIdx), piece['size']):
+                        add_move({'destination':(idx, jIdx), 'size':int(piece['size']), 'origin':copy.deepcopy(piece['location'])})
         
         return moves
     
