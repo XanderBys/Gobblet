@@ -10,7 +10,7 @@ def main(player1, player2, env, rounds, display=False):
         while True:
             if display:
                 env.display()
-                
+
             game_over = False
             result = None
             
@@ -23,7 +23,7 @@ def main(player1, player2, env, rounds, display=False):
                     # ERROR CASE
                     for state in player.states:
                         print(state)
-
+                 
                 # take action
                 next_state, result = env.update(action, player)
                 
@@ -40,7 +40,7 @@ def main(player1, player2, env, rounds, display=False):
                     # the game is over here
                     game_over = True
                     break
-                
+
             if game_over:
                 # dispense rewards and update values
                 if result == 0:
@@ -80,8 +80,8 @@ def main(player1, player2, env, rounds, display=False):
 
 if __name__ == '__main__':
     NUM_ROUNDS = 10000
-    DECAY_RATE = 0.99988
-    
+    DECAY_RATE = .99985
+
     environment = Environment(4, 4, 4)
     p1 = Player('p1', environment, [[{'location':j, 'size':4-j} for j in range(4)] for i in range(3)], DECAY_RATE)
     p2 = Player('p2', environment, [[{'location':j, 'size':4-j} for j in range(4)] for i in range(3)], DECAY_RATE)
@@ -89,5 +89,6 @@ if __name__ == '__main__':
     print('Program started at {}'.format(time.strftime("%H:%M:%S")))
     main(p1, p2, environment, NUM_ROUNDS)
     print('{} rounds of training finished at {}'.format(NUM_ROUNDS, time.strftime("%H:%M:%S")))
+    
     p1.save_policy(time.strftime("%H:%M:%S"))
     p2.save_policy(time.strftime("%H:%M:%S"))

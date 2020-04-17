@@ -2,6 +2,8 @@ import copy
 import numpy as np
 
 class State:
+    hashes = {}
+    
     def __init__(self, board):
         self.board = board
         # dimensions of lower_layers = NUM_ROWS x NUM_COLS x DEPTH-1
@@ -9,15 +11,17 @@ class State:
         self.hash = str(board)
 
     def __eq__(self, other):
-        transformations = self.get_transformations()
+        get_transformations = self.get_transformations
+        array_eq = np.array_equal
+        transformations = get_transformations()
         lower_check = True
         for idx, i in enumerate(self.lower_layers):
-            trans = self.get_transformations(i)
-            if np.array_equal(trans, other.lower_layers[idx]):
+            trans = get_transformations(i)
+            if arr_eq(trans, other.lower_layers[idx]):
                 lower_check = False
                 break
 
-        return np.isin(other.board, transformations)[0].all() #and lower_check
+        return np.isin(other.board, transformations)[0].all() and lower_check
     
     def __hash__(self):
         return hash((str(self.board), str(self.lower_layers)))
@@ -49,6 +53,9 @@ class State:
         transformations.extend([x_reflection, y_reflection])
     
         return transformations
-         
+    
+    def get_empty_lower_layer(self):
+        return State(self.board.copy())
+    
     def __str__(self):
         return str(hash(self))

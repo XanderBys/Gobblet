@@ -36,7 +36,9 @@ class Player:
                 return {'destination':(0, 0), 'size':-1}
         else:
             # use our states-values mappings to choose the best move
+
             max_value = -999
+            get_val = self.states_values.get
             for move in moves:
                 next_state = State(state.board.copy())
                 next_state.board[move['destination'][0], move['destination'][1]] = symbol * move['size']
@@ -44,26 +46,28 @@ class Player:
                     # if the pieces was already on the board, fix it
                     next_state.board[move['origin'][0], move['origin'][1]] = 0
                     
-                val = self.states_values.get(next_state)
+                val = get_val(next_state)
                 value = 0 if val is None else val
 
                 if value > max_value:
                     max_value = value
                     action = move
-        
+            
         return action
     
     def update_values(self, reward):
+        get_val = self.states_values.get
+        new_states_values = {}
         for state in reversed(self.states):
-            value = self.states_values.get(state)
+            value = get_val(state)
             if value is None:
-                self.states_values[state] = 0
-                value = self.states_values[state]
+                value = 0
 
             value += self.LEARNING_RATE * (self.GAMMA * reward - value)
-            self.states_values[state] = value
+            new_states_values.update({state: value})
             reward = float(value)
-           
+        
+        self.states_values.update(new_states_values)
         self.decay_exploration_rate()
 
     def decay_exploration_rate(self):
