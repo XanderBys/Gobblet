@@ -14,14 +14,17 @@ class State:
         get_transformations = self.get_transformations
         arr_eq = np.array_equal
         transformations = get_transformations()
-        lower_check = True
+        
+        lower_transformations = [get_transformations(i) for i in self.lower_layers][0]
+        matches = np.array([arr_eq(lower_transformations[idx], other.lower_layers[idx]) for idx in range(len(self.lower_layers))])
+
         for idx, i in enumerate(self.lower_layers):
             trans = get_transformations(i)
             if arr_eq(trans, other.lower_layers[idx]):
-                lower_check = False
+                lower_check = True
                 break
-
-        return np.isin(other.board, transformations)[0].all() and lower_check
+        
+        return np.isin(other.board, transformations).all() and matches.any()
     
     def __hash__(self):
         return hash((str(self.board), str(self.lower_layers)))
@@ -59,3 +62,9 @@ class State:
     
     def __str__(self):
         return str(hash(self))
+
+if __name__ == '__main__':
+    st1 = State([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
+    st2 = State([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
+
+    print(st1==st2)
