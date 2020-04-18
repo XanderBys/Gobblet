@@ -62,6 +62,11 @@ class State:
     
     def __str__(self):
         return str(hash(self))
+    
+    def __copy__(self):
+        st = State(self.board.copy())
+        st.lower_layers = self.lower_layers.copy()
+        return st
 
 if __name__ == '__main__':
     st1 = State([[1, 0, 0], [0, 0, 0], [0, 0, 0]])

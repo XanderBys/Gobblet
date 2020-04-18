@@ -6,7 +6,11 @@ from Player import Player
 class Environment:
     def __init__(self, NUM_ROWS, NUM_COLS, DEPTH):
         self.state = None
+        self.moves_made = set()
+        self.duplicate_moves = set()
+        self.draw_flag = False
         self.turn = None
+        
         self.NUM_ROWS = NUM_ROWS
         self.NUM_COLS = NUM_COLS
         self.DEPTH = DEPTH
@@ -16,6 +20,9 @@ class Environment:
     def reset(self):
         # resets the board to be empty and the turn to be 'X'
         self.state = State(np.array([[0 for i in range(self.NUM_COLS)] for j in range(self.NUM_COLS)]))
+        self.moves_made = set()
+        self.duplicate_moves = set()
+        self.draw_flag = False
         self.turn = 1
     
     def update(self, action, player):
@@ -26,9 +33,21 @@ class Environment:
             raise ValueError("The action {} is not legal".format(action))
         
         # update the board and the player
+        prev_state = copy.copy(self.state)
+        action_made = {"prev_state": prev_state}
+        
         prev_occupant = int(self.state.board[action['destination'][0], action['destination'][1]])
         self.state.board[action['destination'][0], action['destination'][1]] = self.turn * action['size']
-
+        
+        final_state = self.state
+        action_made.update({"final_state": final_state})
+        if str(action_made) in self.duplicate_moves:
+            self.draw_flag = True
+        elif str(action_made) in self.moves_made:
+            self.duplicate_moves.add(str(action_made))
+        else:
+            self.moves_made.add(str(action_made))
+        
         for i in player.pieces:
             condition = None
             try:
@@ -85,6 +104,11 @@ class Environment:
             if abs(sum(ones)) == self.NUM_ROWS:
                 return sum(ones) / self.NUM_ROWS
         
+        # check for draws
+        # that is, if three identical moves have been made, it's a draw
+        if self.draw_flag:
+            return 0
+            
         return None
     
     def get_legal_moves(self, player):

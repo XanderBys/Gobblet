@@ -6,6 +6,8 @@ from Player import Player
 
 def main(player1, player2, env, rounds, display=False):
     players = [player1, player2]
+    times = []
+    l = 0
     for i in range(rounds):
         while True:
             if display:
@@ -18,7 +20,9 @@ def main(player1, player2, env, rounds, display=False):
                 # this is a player's turn
                 
                 # choose action
+                start_time = time.time()
                 action = player.choose_action(env.state, env.turn)
+                times.append(time.time() - start_time)
                 if action['size'] == -1:
                     # ERROR CASE
                     for state in player.states:
@@ -38,6 +42,7 @@ def main(player1, player2, env, rounds, display=False):
                 
                 if result != None:
                     # the game is over here
+                    l = len(player.states)
                     game_over = True
                     break
 
@@ -72,15 +77,17 @@ def main(player1, player2, env, rounds, display=False):
         
         if i % (rounds / 20) == 0:
             print('{}% complete at {}. player1 W/L/D: {}/{}/{}'.format(i/(rounds / 100), time.strftime("%H:%M:%S"), player1.win, player1.loss, player1.draw))
+            print('Average move time | Length of game: {} | {}'.format(sum(times)/len(times), l))
         # switch who starts the game
         players = players[::-1]
         # make sure players keep the same symbol
         # if it's an even round, p2 starts
         env.turn = -1 if i % 2 == 0 else 1
 
+
 if __name__ == '__main__':
-    NUM_ROUNDS = 10000
-    DECAY_RATE = .99985
+    NUM_ROUNDS = 50
+    DECAY_RATE = 1#.99985
 
     environment = Environment(4, 4, 4)
     p1 = Player('p1', environment, [[{'location':j, 'size':4-j} for j in range(4)] for i in range(3)], DECAY_RATE)
