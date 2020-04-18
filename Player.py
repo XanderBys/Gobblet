@@ -6,8 +6,8 @@ from State import State
 class Player:
     def __init__(self, name, env, pieces, EXP_DECAY_RATE, explore=True):
         self.LEARNING_RATE = 0.2
-        self.GAMMA = 0.9c
-        self.exploration_rate = 0.3 if explore else 0
+        self.GAMMA = 0.9
+        self.exploration_rate = 0.9 if explore else 0
         self.EXP_DECAY_RATE = EXP_DECAY_RATE
         
         self.name = name
