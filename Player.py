@@ -2,6 +2,7 @@ import random
 import copy
 import numpy as np
 from State import State
+import Environment
 
 class Player:
     def __init__(self, name, env, pieces, EXP_DECAY_RATE, explore=True):
@@ -24,6 +25,8 @@ class Player:
         self.win = 0
         self.loss = 0
         self.draw = 0
+        self.total_reward = 0
+        self.total_reward_values = []
     
     def choose_action(self, state, symbol):
         action = None
@@ -38,24 +41,21 @@ class Player:
             # use our states-values mappings to choose the best move
 
             max_value = -999
-            get_val = self.states_values.get
-            for move in moves:
-                next_state = State(state.board.copy())
-                next_state.board[move['destination'][0], move['destination'][1]] = symbol * move['size']
-                if len(move['origin']) == 2:
-                    # if the pieces was already on the board, fix it
-                    next_state.board[move['origin'][0], move['origin'][1]] = 0
-                    
-                val = get_val(next_state)
-                value = 0 if val is None else val
+            get_val = self.lookup_value
+            next_env = lambda x: Environment.Environment(4, 4, 4, x.deepcopy())
+            next_vals = [get_val(next_env(state).update(move, self.deepcopy(), symbol, False)[0]) for move in moves]
+    
+            action = moves[next_vals.index(max(next_vals))]
 
-                if value > max_value:
-                    max_value = value
-                    action = move
-            
         return action
+        
+    def lookup_value(self, state):
+        val = self.states_values.get(state)
+        return 0 if val is None else val
     
     def update_values(self, reward):
+        self.total_reward += reward
+        self.total_reward_values.append(self.total_reward)
         get_val = self.states_values.get
         new_states_values = {}
         for state in reversed(self.states):
@@ -64,7 +64,12 @@ class Player:
                 value = 0
 
             value += self.LEARNING_RATE * (self.GAMMA * reward - value)
-            new_states_values.update({state: value})
+            new_dict = dict.fromkeys(state.get_transformations_states())
+            for key in new_dict.keys():
+                new_dict[key] = value
+
+            new_states_values.update(new_dict)
+    
             reward = float(value)
         
         self.states_values.update(new_states_values)
@@ -77,7 +82,10 @@ class Player:
         self.states = []
         self.pieces = copy.deepcopy(self.orig_pieces)
         self.pieces_on_board = []
-        
+    
+    def deepcopy(self):
+        return Player(self.name, Environment.Environment(4, 4, 4, self.env.state.deepcopy()), copy.deepcopy(self.pieces), self.EXP_DECAY_RATE)
+    
     def save_policy(self, time):
         fout = open("policy_{}".format(self.name), 'w')
         fout.write("{}\n".format(time))

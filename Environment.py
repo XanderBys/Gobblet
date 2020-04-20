@@ -4,7 +4,7 @@ from State import State
 from Player import Player
 
 class Environment:
-    def __init__(self, NUM_ROWS, NUM_COLS, DEPTH):
+    def __init__(self, NUM_ROWS, NUM_COLS, DEPTH, init_board=None):
         self.state = None
         self.moves_made = set()
         self.duplicate_moves = set()
@@ -25,19 +25,23 @@ class Environment:
         self.draw_flag = False
         self.turn = 1
     
-    def update(self, action, player):
+    def update(self, action, player, turn=0, check_legal=False):
         # updates the board given an action represented as 2 indicies e.g. [0, 2]
         # returns [next_state, result]
         # where next_state is the board after action is taken
-        if action not in self.get_legal_moves(player):
+        if check_legal and action not in self.get_legal_moves(player):
+            print(self.state)
             raise ValueError("The action {} is not legal".format(action))
         
+        if turn == 0:
+            turn = self.turn
+            
         # update the board and the player
         prev_state = copy.copy(self.state)
         action_made = {"prev_state": prev_state}
         
         prev_occupant = int(self.state.board[action['destination'][0], action['destination'][1]])
-        self.state.board[action['destination'][0], action['destination'][1]] = self.turn * action['size']
+        self.state.board[action['destination'][0], action['destination'][1]] = turn * action['size']
         
         final_state = self.state
         action_made.update({"final_state": final_state})

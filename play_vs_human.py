@@ -21,6 +21,7 @@ while True:
         if result != None:
             # the game is over here
             game_over = True
+            print("RESULT: {}".format(result))
             break
 
         game_over = False
@@ -40,6 +41,7 @@ while True:
         if result != None:
             # the game is over here
             game_over = True
+            print("RESULT: {}".format(result))
             break
 
     cont = input("Continue(y/n)? ")
@@ -47,3 +49,5 @@ while True:
         break
     
     env.reset()
+    player.reset()
+    human.reset()
