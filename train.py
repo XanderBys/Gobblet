@@ -30,6 +30,7 @@ def main(num_processes, num_rounds, decay_rate):
         data = q.get()
         policy_p1.update(data[0].states_values)
         policy_p2.update(data[1].states_values)
+        print(data[0].states_values)
         players.extend(data)
         if q.empty():
             break
@@ -141,10 +142,9 @@ def run_training(queue, player1, player2, env, rounds, output=False, display=Fal
     queue.put(players)
 
 if __name__ == '__main__':
-    #1: 30 min  4: 
-    NUM_PROCESSES = 4 # the number of processes to be run
-    NUM_ROUNDS = 2000 # the number of rounds to be run on each process
-    DECAY_RATE = 0.99986
+    NUM_PROCESSES = 1 # the number of processes to be run
+    NUM_ROUNDS = 20 # the number of rounds to be run on each process
+    DECAY_RATE = 0.9#9997
     
     # run training on multiple processors simultaneously
     main(NUM_PROCESSES, NUM_ROUNDS, DECAY_RATE)
