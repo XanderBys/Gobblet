@@ -29,19 +29,27 @@ class Environment:
         # updates the board given an action represented as 2 indicies e.g. [0, 2]
         # returns [next_state, result]
         # where next_state is the board after action is taken
-        if check_legal and action not in self.get_legal_moves(player):
-            print(self.state)
-            raise ValueError("The action {} is not legal".format(action))
+        piece, location = action
+        if not self.is_legal(action, player):
+            if check_legal:
+                print(self.state)
+                raise ValueError("The action {} is not legal".format(action))
+            else:
+                return (self.state, 10*self.turn)
         
         if turn == 0:
             turn = self.turn
+        
+        if piece.is_on_board:
+            # if the piece was on the board, set its origin to be empty
+            self.state.board[location] = 0
             
         # update the board and the player
         prev_state = copy.copy(self.state)
         action_made = {"prev_state": prev_state}
         
-        prev_occupant = int(self.state.board[action['destination'][0], action['destination'][1]])
-        self.state.board[action['destination'][0], action['destination'][1]] = turn * action['size']
+        prev_occupant = int(self.state.board[location])
+        self.state.board[location] = turn * piece.size
         
         final_state = self.state
         action_made.update({"final_state": final_state})
@@ -52,22 +60,24 @@ class Environment:
         else:
             self.moves_made.add(str(action_made))
         
-        for i in player.pieces:
+        for idx, i in enumerate(player.pieces):
             condition = None
             try:
-                condition = i[0]['size'] == action['size']
+                condition = i.size == piece.size and not i.is_on_board and not piece.is_on_board
             except IndexError:
                 continue
             if condition:
-                i.pop(0)
+                # update values for the locations of pieces
+                for idx, i in enumerate(player.pieces[piece.stack_number*4+piece.location:]):
+                    if i.is_top_of_stack:
+                        break
+                    player.pieces[idx].location -= 1
+                    
                 break
-
-        player.pieces_on_board.append({'location': action['destination'], 'size': action['size']})
         
-        if len(action['origin']) == 2:
-            # if the piece was on the board, set its origin to be empty
-            self.state.board[action['origin'][0], action['origin'][1]] = 0
-        
+        if self.state.lower_layers[0][location] != 0:
+            self.state.board[location] = self.state.lower_layers[0][location]
+            
         if prev_occupant != 0:
             self.update_lower_layers(action, player, prev_occupant)
             
@@ -77,12 +87,17 @@ class Environment:
         return (self.state, self.get_result(self.state))
     
     def update_lower_layers(self, action, player, prev_occupant, i=0):
+        piece, location = action
         layer = self.state.lower_layers[i]
-        dest = layer[action['destination'][0], action['destination'][1]]
+        dest = layer[location]
         if dest != 0:
             self.update_lower_layers(self, action, player, dest, i+1)
-        dest = self.turn * action['size']
-        self.state.lower_layers[i+1, action['destination'][0], action['destination'][1]] = prev_occupant
+        dest = self.turn * piece.size
+        self.state.lower_layers[i+1, location[0], location[1]] = prev_occupant
+        for p in player.pieces:
+            if p.location == location:
+                p.stack_number += 1
+                break
         
     def get_result(self, state):
         # returns None if the game isn't over, 1 if white wins and -1 if black wins
@@ -115,6 +130,43 @@ class Environment:
             
         return None
     
+    def is_legal(self, action, player):
+        piece, location = action
+        curr_piece = self.state.board[location]
+        
+        # the piece has to be bigger than the one currently there
+        if piece.size <= curr_piece:
+            return False
+        
+        # implement the rule that a new gobblet on the board must be on an empty space
+        if not piece.is_on_board and curr_piece != 0:
+            # exception: if there is three in a row through the desired location, the move is valid
+            row = self.state.board[location[0]]
+            col = self.state.board[:, location[1]]
+            diag = [0 for i in range(self.NUM_ROWS)]
+            if location[0]==location[1]:
+                diag = self.state.board.diagonal()
+            elif location[0]+location[1] == self.NUM_ROWS-1:
+                diag = np.fliplr(self.state.board).diagonal()
+            
+            flag = False
+            
+            for i in [row, col, diag]:
+                if flag:
+                    break
+                counter = 0
+                for j in np.squeeze(i):
+                    if j != 0:
+                        counter += 1
+                    if counter==3:
+                        flag = True
+                        break
+            
+            if not flag:
+                return False
+        
+        return True    
+
     def get_legal_moves(self, player):
         # returns the legal moves that can be taken
         moves = []
@@ -125,21 +177,14 @@ class Environment:
                 for stack in player.pieces:
                     if len(stack) == 0:
                         continue
-                    if is_valid_move((idx, jIdx), stack[0]['size']):
-                        add_move({'destination':(idx, jIdx), 'size':int(stack[0]['size']), 'origin':[0]})
+                    if is_valid_move((idx, jIdx), stack[0].size):
+                        add_move([(idx, jIdx), int(stack[0].size), [0]])
                 
                 for piece in player.pieces_on_board:
-                    if is_valid_move((idx, jIdx), piece['size']):
-                        add_move({'destination':(idx, jIdx), 'size':int(piece['size']), 'origin':copy.deepcopy(piece['location'])})
+                    if is_valid_move((idx, jIdx), piece.size):
+                        add_move([(idx, jIdx), int(piece.size), copy.deepcopy(piece[0])])
         
         return moves
-    
-    def is_valid_move(self, location, size):
-        destination = self.state.board[location[0], location[1]]
-        try:
-            return destination == 0 or abs(destination) < size
-        except TypeError:
-            print(size)
     
     def display(self):
         for i in self.state.board:
